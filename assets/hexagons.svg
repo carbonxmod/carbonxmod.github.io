@@ -7,7 +7,7 @@
     <style>
         .background {
             fill: url(#background);
-            animation: whirl 19.1s ease-in-out infinite alternate;
+            animation: whirl 23.1s ease-in-out infinite alternate;
         }
 
         .whirl {
