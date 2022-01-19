@@ -1,0 +1,52 @@
+:root {
+    --darker: #1e1f23;
+    --dark: #272c2f;
+    --light: #363a3b;
+    --lighter: #d8d9d7;
+}
+
+body {
+    background: var(--darker);
+}
+
+section {
+    height: 100vh;
+}
+
+.showcase {
+    display: grid;
+    grid-template-rows: 3fr min-content 1fr min-content min-content 2fr;
+    place-items: center;
+    padding: 1rem;
+    font-family: Gruppo;
+    text-align: center;
+}
+
+.showcase img {
+    grid-row: 2 / span 1;
+    width: calc(80vmin + 20vmax);
+}
+
+.showcase h1 {
+    grid-row: 4 / span 1;
+    font-size: max(2rem, 8vmin);
+    letter-spacing: 0.5vw;
+    line-height: 1;
+}
+
+.showcase h2 {
+    grid-row: 5 / span 1;
+    font-size: max(1rem, 3vmin);
+    opacity: 0.4;
+}
+
+.bg-hexagons {
+    background: url('assets/hexagons.svg');
+    background-size: cover;
+    background-attachment: fixed;
+    color: var(--lighter);
+}
+
+.bg-lighter {
+    background-color: var(--lighter);
+}
