@@ -9,8 +9,26 @@ body {
     background: var(--darker);
 }
 
+@keyframes fadeOut {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+.loading {
+    pointer-events: none;
+    opacity: 0;
+    animation: fadeOut 1s;
+}
+
 section {
-    height: 100vh;
+    min-height: 100vh;
 }
 
 .showcase {
