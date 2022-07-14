@@ -32,26 +32,114 @@
                 background: #1e1f23;
             "
         ></div>
-        <section class="showcase bg-hexagons">
+        <header class="showcase bg-hexagons">
             <img src="assets/keyboard.svg" />
             <h1>carbon X mod</h1>
             <h2>isometric M-Audio Oxygen mod</h2>
+        </header>
+        <section class="access bg-darker">
+            <a
+                href="https://github.com/carbonxmod/carbonxmod.github.io/tree/main/files"
+                rel="noreferrer"
+                target="_blank"
+            >
+                <i data-feather="download"></i>
+            </a>
+            <span>.f3d .step .stl</span>
         </section>
-        <section class="bg-lighter">
-            <i data-feather="box"></i>
-            <i data-feather="tool"></i>
-            <i data-feather="music"></i>
-            <i data-feather="hexagon"></i>
-            <i data-feather="codepen"></i>
-            <i data-feather="codesandbox"></i>
-            <i data-feather="download"></i>
-            <i data-feather="grid"></i>
-            <i data-feather="layers"></i>
-        </section>
-        <section><h1>CarbonX</h1></section>
-
+        <div class="explainers bg-hexagons">
+            <section>
+                <i data-feather="eye"></i>
+                <h3>overview</h3>
+                <p>hello</p>
+            </section>
+            <section>
+                <i data-feather="codepen"></i>
+                <h3>design</h3>
+                <p>hello</p>
+            </section>
+            <section>
+                <i data-feather="box"></i>
+                <h3>manufacturing</h3>
+                <p>hello</p>
+            </section>
+            <section>
+                <i data-feather="tool"></i>
+                <h3>assembly</h3>
+                <p>hello</p>
+            </section>
+            <section>
+                <i data-feather="music"></i>
+                <h3>play</h3>
+                <p>hello</p>
+            </section>
+        </div>
+        <footer class="bg-darker">
+            <img src="/files/preview/keyboard.jpg" alt="Isometric keyboard" />
+            <div id="container">reveal</div>
+            <svg width="100%" height="100%">
+                <radialGradient id="fade">
+                    <stop offset="50%" stop-color="black" />
+                    <stop offset="90%" stop-color="white" />
+                </radialGradient>
+                <filter id="displacement">
+                    <feTurbulence
+                        type="fractalNoise"
+                        baseFrequency="0.01"
+                        numOctaves="1"
+                        result="turbulence"
+                    />
+                    <feDisplacementMap
+                        in2="turbulence"
+                        in="SourceGraphic"
+                        scale="100"
+                        xChannelSelector="R"
+                        yChannelSelector="G"
+                        result="result"
+                    />
+                    <feTurbulence
+                        type="fractalNoise"
+                        baseFrequency="0.05"
+                        numOctaves="5"
+                        result="turbulence2"
+                    />
+                    <feDisplacementMap
+                        in2="turbulence2"
+                        in="result"
+                        scale="50"
+                        xChannelSelector="R"
+                        yChannelSelector="G"
+                        result="result"
+                    />
+                    />
+                </filter>
+                <mask id="mask">
+                    <rect width="100%" height="100%" fill="white" />
+                    <circle
+                        id="cursor"
+                        cx="-100"
+                        cy="-100"
+                        r="10%"
+                        fill="url(#fade)"
+                        filter="url(#displacement)"
+                    />
+                </mask>
+            </svg>
+        </footer>
         <script>
             feather.replace()
+
+            const container = document.querySelector('#container')
+            const cursor = document.querySelector('#cursor')
+
+            container.addEventListener('pointermove', (event) => {
+                cursor.setAttribute('cx', event.offsetX)
+                cursor.setAttribute('cy', event.offsetY)
+            })
+            container.addEventListener('pointerout', (event) => {
+                cursor.setAttribute('cx', -100)
+                cursor.setAttribute('cy', -100)
+            })
         </script>
     </body>
 </html>
