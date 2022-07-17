@@ -146,12 +146,15 @@
         <script>
             feather.replace()
 
-            const container = document.querySelector('.overlay')
-            const cursor = document.querySelector('#cursor')
-
-            container.addEventListener('pointermove', (event) => {
+            document.querySelector('.overlay').addEventListener('pointermove', (event) => {
+                const cursor = document.querySelector('#cursor')
+                
                 cursor.setAttribute('cx', event.offsetX)
                 cursor.setAttribute('cy', event.offsetY)
+            })
+
+            document.querySelector('.reveal').addEventListener('contextmenu', (event) => {
+                event.preventDefault()
             })
         </script>
     </body>

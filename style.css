@@ -93,12 +93,12 @@ body {
 }
 
 .bg-lighter {
-    background-color: var(--lighter);
+    background: var(--lighter);
     color: var(--dark);
 }
 
 .bg-darker {
-    background-color: var(--dark);
+    background: var(--dark);
     color: var(--lighter);
 }
 
@@ -133,7 +133,7 @@ body {
     padding: 2vh;
     gap: 1vh;
     border-radius: 1rem;
-    background-color: var(--dark);
+    background: var(--dark);
     color: var(--lighter);
     box-shadow: 2vh 2vh 5vh -4vh black;
 }
