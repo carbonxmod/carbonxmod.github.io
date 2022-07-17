@@ -159,6 +159,7 @@ body {
     display: grid;
     place-items: center;
     padding: 1rem;
+    user-select: none;
 }
 
 .reveal::after {
@@ -188,7 +189,7 @@ body {
     .showOnDesktop {
         display: block;
     }
-    
+
     .showOnMobile {
         display: none;
     }
@@ -202,7 +203,6 @@ body {
     fill: var(--lighter);
     text-anchor: middle;
     dominant-baseline: middle;
-    user-select: none;
     font-size: max(2rem, 12vmin);
     letter-spacing: 0.5vw;
     font-family: Gruppo;
