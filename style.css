@@ -221,3 +221,8 @@ body {
     r: 30%;
     transition: r 1s;
 }
+
+.hidden {
+    opacity: 0;
+    transition: opacity 2s ease-out;
+}
