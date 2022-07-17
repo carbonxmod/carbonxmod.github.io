@@ -74,10 +74,9 @@
                 <p>hello</p>
             </section>
         </div>
-        <footer class="bg-darker">
+        <section class="reveal bg-darker">
             <img src="/files/preview/keyboard.jpg" alt="Isometric keyboard" />
-            <div id="container">reveal</div>
-            <svg width="100%" height="100%">
+            <svg class="overlay" width="100%" height="100%">
                 <radialGradient id="fade">
                     <stop offset="50%" stop-color="black" />
                     <stop offset="90%" stop-color="white" />
@@ -111,34 +110,28 @@
                         yChannelSelector="G"
                         result="result"
                     />
-                    />
                 </filter>
                 <mask id="mask">
-                    <rect width="100%" height="100%" fill="white" />
-                    <circle
-                        id="cursor"
-                        cx="-100"
-                        cy="-100"
-                        r="10%"
-                        fill="url(#fade)"
-                        filter="url(#displacement)"
-                    />
+                    <circle cx="50%" cy="50%" r="100%" fill="white" />
+                    <g filter="url(#displacement)">
+                        <circle id="cursor" fill="url(#fade)" />
+                    </g>
                 </mask>
+                <g mask="url(#mask)">
+                    <circle cx="50%" cy="50%" r="100%" class="screen" />
+                    <text x="50%" y="50%" class="text">reveal</text>
+                </g>
             </svg>
-        </footer>
+        </section>
         <script>
             feather.replace()
 
-            const container = document.querySelector('#container')
+            const container = document.querySelector('.overlay')
             const cursor = document.querySelector('#cursor')
 
             container.addEventListener('pointermove', (event) => {
                 cursor.setAttribute('cx', event.offsetX)
                 cursor.setAttribute('cy', event.offsetY)
-            })
-            container.addEventListener('pointerout', (event) => {
-                cursor.setAttribute('cx', -100)
-                cursor.setAttribute('cy', -100)
             })
         </script>
     </body>

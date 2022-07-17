@@ -155,56 +155,52 @@ body {
     font-family: Gruppo;
 }
 
-footer {
+.reveal {
     display: grid;
     place-items: center;
     padding: 1rem;
+    touch-action: none;
 }
 
-footer::after {
+.reveal::after {
     content: '';
+    pointer-events: none;
     grid-column: 1;
     grid-row: 1;
     width: 100%;
     height: 100%;
     box-shadow: inset 0 0 2vh 2vh var(--dark);
-    border-radius: 1.9rem;
 }
 
-footer > * {
+.reveal > * {
     grid-column: 1;
     grid-row: 1;
 }
 
-footer > img {
-    border-radius: 2rem;
+.overlay .screen {
+    fill: var(--dark);
 }
 
-footer > div {
-    display: grid;
-    place-items: center;
-    width: 100%;
-    height: 100%;
-    color: var(--lighter);
-    background-color: var(--dark);
+.overlay .text {
+    fill: var(--lighter);
+    text-anchor: middle;
+    dominant-baseline: middle;
+    user-select: none;
     font-size: max(2rem, 12vmin);
     letter-spacing: 0.5vw;
     font-family: Gruppo;
-    mask: url(#mask);
-    user-select: none;
 }
 
 #cursor {
-    transition: transform 10s;
+    transition: r 0.5s ease-in;
 }
 
-footer:hover #cursor {
-    transform: scale(2);
-    transform-origin: 50% 50%;
+.reveal:hover #cursor {
+    r: 20%;
+    transition: r 2s ease-out;
 }
 
-footer:active #cursor {
-    transform: scale(3);
-    transform-origin: 50% 50%;
-    transition: transform 1s;
+.reveal:active #cursor {
+    r: 30%;
+    transition: r 1s;
 }
