@@ -146,27 +146,33 @@
         <script>
             feather.replace()
 
-            let clickCount = 0
-
             const overlay = document.querySelector('.overlay')
             const reveal = document.querySelector('.reveal')
             const cursor = document.querySelector('#cursor')
+
+            let clickCount = 0
+
+            const hideOnMultipleClicks = () => {
+                clickCount++
+
+                if (clickCount === 5) {
+                    overlay.classList.add('hidden')
+                }
+            }
 
             overlay.addEventListener('pointermove', (event) => {
                 cursor.setAttribute('cx', event.offsetX)
                 cursor.setAttribute('cy', event.offsetY)
             })
 
-            overlay.addEventListener('click', (event) => {
-                clickCount++
-
-                if (clickCount === 10) {
-                    overlay.classList.add('hidden')
-                }
+            reveal.addEventListener('click', (event) => {
+                hideOnMultipleClicks()
             })
 
             reveal.addEventListener('contextmenu', (event) => {
                 event.preventDefault()
+
+                hideOnMultipleClicks()
             })
         </script>
     </body>
