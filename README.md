@@ -1,3 +1,3 @@
 # carbonxmod.github.io
 
-Isometric M-Audio Oxygen mod
+Isomorphic M-Audio Oxygen mod
