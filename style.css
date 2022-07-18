@@ -213,12 +213,12 @@ body {
 }
 
 .reveal:hover #cursor {
-    r: 20%;
+    r: 20vmax;
     transition: r 2s ease-out;
 }
 
 .reveal:active #cursor {
-    r: 30%;
+    r: 30vmax;
     transition: r 1s;
 }
 
