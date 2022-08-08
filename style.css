@@ -115,12 +115,12 @@ body {
 @media screen and (min-width: 800px) {
     .explainers {
         grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: 1fr;
     }
 
     .explainers::before {
         content: '';
         grid-column: 2;
-        height: 10vh;
     }
 }
 
