@@ -1,3 +1,5 @@
 node_modules
 pnpm-lock.yaml
 .pnpm-debug.log
+assets/assembly.js
+assets/assembly.js.LEGAL.txt

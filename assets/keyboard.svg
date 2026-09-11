@@ -98,6 +98,11 @@
                 transform-origin: center top;
             }
         }
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation: none !important;
+            }
+        }
     </style>
 
     <defs>

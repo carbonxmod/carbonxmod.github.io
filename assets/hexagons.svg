@@ -49,6 +49,11 @@
                 transform-origin: center;
             }
         }
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation: none !important;
+            }
+        }
     </style>
 
     <defs>

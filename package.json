@@ -1,9 +1,18 @@
 {
     "private": true,
     "scripts": {
+        "build": "esbuild src/assembly.js --bundle --minify --format=iife --target=es2020 --legal-comments=linked --outfile=assets/assembly.js",
+        "render:assembly": "node scripts/render-assembly.mjs",
+        "test:assembly": "node scripts/test-assembly.mjs",
         "fix:format": "prettier --write ."
     },
+    "dependencies": {
+        "gsap": "^3.15.0",
+        "three": "0.180.0"
+    },
     "devDependencies": {
+        "esbuild": "0.25.10",
+        "playwright": "^1.63.0",
         "prettier": "^2.5.1"
     }
 }
