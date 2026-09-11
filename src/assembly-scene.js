@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { STLLoader } from 'three/addons/loaders/STLLoader.js'
+import { stages } from './assembly-stages.js'
 
 const section = document.querySelector('.assembly-sequence')
 const viewport = section.querySelector('.assembly-viewport')
@@ -10,14 +11,6 @@ const description = section.querySelector('.assembly-description')
 const navigation = section.querySelector('.assembly-navigation')
 const progressBar = section.querySelector('.assembly-progress span')
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)')
-const stages = [
-    [0, 'start with the holder', 'One brace holds twelve keys.'],
-    [0.1, 'seat the key', 'The key fits into its slot in the brace.'],
-    [0.24, 'slide in the wire', 'A 1.1 mm steel wire holds the key in place.'],
-    [0.32, 'fit the buttons', 'Two buttons snap onto the same key.'],
-    [0.48, 'one octave', 'Six long keys and six short keys share a brace.'],
-    [0.66, '48 notes', 'Four complete octaves, with the highest C left out.'],
-]
 
 const clamp = THREE.MathUtils.clamp
 const mix = THREE.MathUtils.lerp
@@ -127,7 +120,6 @@ async function initialize() {
         }
 
         // The CAD contains one octave. Repeat its original transforms at 162 mm.
-        // The modified keyboard omits the original highest C.
         for (let octave = 0; octave < 4; octave++) {
             for (const part of placements.parts) {
                 const note = part.note === null ? null : octave * 12 + part.note

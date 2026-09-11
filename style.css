@@ -44,21 +44,32 @@ a {
     animation: fadeOut 1s;
 }
 
+.landing {
+    height: 100svh;
+    height: 100dvh;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+}
 .showcase {
-    min-height: 680px;
-    min-height: min(820px, 88svh);
+    min-height: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 72px 32px 64px;
+    padding: clamp(16px, 4svh, 48px) 32px;
     font-family: Gruppo, sans-serif;
     text-align: center;
 }
 .showcase img {
     display: block;
     width: min(100%, 1040px);
-    margin-bottom: 48px;
+    min-height: 0;
+    flex: 0 1 auto;
+    object-fit: contain;
+    margin-bottom: clamp(12px, 4svh, 48px);
+}
+.showcase > :not(img) {
+    flex-shrink: 0;
 }
 .showcase h1 {
     margin: 0;
@@ -74,6 +85,21 @@ a {
     color: var(--muted);
     line-height: 1.5;
 }
+.scroll-cue {
+    display: inline-flex;
+    margin: 28px 0 0;
+    color: var(--muted);
+    animation: scroll-pulse 2s ease-in-out infinite;
+}
+@keyframes scroll-pulse {
+    0%,
+    100% {
+        opacity: 0.35;
+    }
+    50% {
+        opacity: 1;
+    }
+}
 
 .bg-hexagons {
     background-image: linear-gradient(#1e1f2380, #1e1f2380),
@@ -87,6 +113,7 @@ a {
 
 .access {
     border-block: 1px solid #ffffff0d;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 .access-inner {
     width: min(1120px, calc(100% - 64px));
@@ -314,36 +341,6 @@ a {
     object-fit: contain;
     touch-action: pan-y;
 }
-.assembly-legend {
-    position: absolute;
-    bottom: 4px;
-    left: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    pointer-events: none;
-    color: var(--muted);
-    font-size: 11px;
-}
-.assembly-legend span {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-.swatch {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-}
-.swatch.brace {
-    background: #687775;
-}
-.swatch.key {
-    background: #b5c0bb;
-}
-.swatch.button {
-    background: #e7e8df;
-}
 .assembly-caption {
     display: flex;
     align-items: flex-end;
@@ -373,23 +370,29 @@ a {
     display: block;
 }
 .assembly-progress {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: var(--stage-gap, 8px);
     height: 2px;
     margin: 8px 0 12px;
+}
+.assembly-progress span {
     background: #ffffff14;
     overflow: hidden;
 }
-.assembly-progress span {
+.assembly-progress span::after {
+    content: '';
     display: block;
     width: 100%;
     height: 100%;
     background: var(--lighter);
-    transform: scaleX(0);
+    transform: scaleX(var(--progress, 0));
     transform-origin: left;
 }
 .assembly-navigation nav {
-    display: flex;
-    justify-content: space-between;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: var(--stage-gap, 8px);
 }
 .assembly-navigation button {
     padding: 8px 0;
@@ -403,6 +406,9 @@ a {
 .assembly-navigation button[aria-current],
 .assembly-navigation button:hover {
     color: var(--lighter);
+}
+.assembly-navigation button[aria-current] {
+    font-weight: 500;
 }
 .assembly-navigation[hidden],
 .assembly-status:empty {
@@ -458,11 +464,10 @@ button:focus-visible {
 }
 @media (max-width: 700px) {
     .showcase {
-        min-height: 0;
-        padding: 72px 20px 52px;
+        padding: clamp(12px, 4svh, 36px) 20px;
     }
     .showcase img {
-        margin-bottom: 36px;
+        margin-bottom: clamp(12px, 4svh, 36px);
     }
     .showcase h1 {
         font-size: clamp(2.5rem, 9vw, 4rem);
@@ -560,9 +565,6 @@ button:focus-visible {
     .assembly-skip {
         font-size: 10px;
     }
-    .assembly-legend {
-        display: none;
-    }
     .assembly-caption {
         align-items: flex-start;
     }
@@ -577,8 +579,8 @@ button:focus-visible {
         display: block;
         font-size: 10px;
     }
-    .assembly-navigation nav {
-        gap: 4px;
+    .assembly-navigation {
+        --stage-gap: 4px;
     }
     .assembly-navigation button {
         font-size: 10px;

@@ -84,6 +84,54 @@ try {
             )
         }, progress)
     }
+    async function checkTimeline() {
+        const state = await page.locator('.assembly-sequence').evaluate((s) => {
+            const buttons = [
+                ...s.querySelectorAll('.assembly-navigation button'),
+            ]
+            const segments = [...s.querySelectorAll('.assembly-progress span')]
+            return {
+                frame: Number(s.dataset.frame),
+                active: buttons.findIndex(
+                    (button) => button.getAttribute('aria-current') === 'step',
+                ),
+                fills: segments.map((segment) =>
+                    Number(segment.style.getPropertyValue('--progress')),
+                ),
+                aligned: segments.every((segment, index) => {
+                    const track = segment.getBoundingClientRect()
+                    const label = buttons[index].getBoundingClientRect()
+                    return (
+                        Math.abs(track.left - label.left) < 1 &&
+                        Math.abs(track.width - label.width) < 1
+                    )
+                }),
+            }
+        })
+        const progress = state.frame / 120
+        const starts = [0, 0.1, 0.24, 0.32, 0.46, 0.66]
+        assert.equal(
+            state.active,
+            starts.findLastIndex((start) => progress >= start),
+        )
+        assert.ok(state.aligned)
+        starts.forEach((start, index) => {
+            const expected = Math.max(
+                0,
+                Math.min(
+                    1,
+                    (progress - start) / ((starts[index + 1] ?? 1) - start),
+                ),
+            )
+            assert.ok(Math.abs(state.fills[index] - expected) < 0.00001)
+        })
+    }
+    // Both sides of every transition, going forward and backward.
+    const boundaries = [0, 11, 12, 28, 29, 38, 39, 55, 56, 79, 80, 120]
+    for (const frame of [...boundaries, ...boundaries.toReversed()]) {
+        await seek(frame / 120)
+        await checkTimeline()
+    }
     for (const [progress, notes] of [
         [0, 0],
         [0.05, 0],
@@ -132,6 +180,7 @@ try {
     ]) {
         await page.setViewportSize(viewport)
         await seek(1)
+        await checkTimeline()
         assert.ok(
             await page.evaluate(
                 () => document.documentElement.scrollWidth <= innerWidth,
@@ -184,8 +233,67 @@ try {
             .evaluate((img) => img.complete && img.naturalWidth > 0),
     )
     assert.deepEqual(errors, [])
+
+    // A slow frame must not let the highlight run ahead of the visible image.
+    const delayed = await browser.newPage({
+        reducedMotion: 'reduce',
+        viewport: { width: 1440, height: 1000 },
+    })
+    let releaseFrame
+    const gate = new Promise((resolve) => {
+        releaseFrame = resolve
+    })
+    await delayed.route('**/wide/024.webp*', async (route) => {
+        await gate
+        await route.continue()
+    })
+    try {
+        await delayed.goto(url)
+        await delayed.locator('.assembly-sequence.is-ready').waitFor()
+        await delayed.locator('.assembly-navigation button').first().click()
+        await delayed.waitForFunction(
+            () =>
+                document.querySelector('.assembly-sequence').dataset.frame ===
+                '10',
+        )
+        await delayed.locator('.assembly-navigation button').nth(1).click()
+        await delayed.waitForFunction(
+            () =>
+                document.querySelector('.assembly-sequence').dataset
+                    .progress === '0.2000',
+        )
+        assert.equal(
+            await delayed
+                .locator('.assembly-sequence')
+                .getAttribute('data-frame'),
+            '10',
+        )
+        assert.equal(
+            await delayed
+                .locator('.assembly-navigation button[aria-current]')
+                .textContent()
+                .then((text) => text.trim()),
+            'brace',
+        )
+        releaseFrame()
+        await delayed.waitForFunction(
+            () =>
+                document.querySelector('.assembly-sequence').dataset.frame ===
+                '24',
+        )
+        assert.equal(
+            await delayed
+                .locator('.assembly-navigation button[aria-current]')
+                .textContent()
+                .then((text) => text.trim()),
+            'key',
+        )
+    } finally {
+        releaseFrame()
+        await delayed.close()
+    }
     console.log(
-        'Passed: WebGL disabled, visible 3D poster, pinned wheel scrolling, reverse, 48 notes, keyboard controls, mobile/landscape, reduced motion, no JS, and file:// preview.',
+        'Passed: stage boundaries in both directions, aligned progress segments, delayed-frame highlights, WebGL disabled, pinned scrolling, 48 notes, keyboard controls, mobile/landscape, reduced motion, no JS, and file:// preview.',
     )
 } finally {
     await browser.close()

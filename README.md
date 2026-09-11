@@ -9,11 +9,13 @@ The checked-in site is ready to serve; no build is needed to view it.
 
 ## 3D assembly animation
 
-The scroll-driven sequence sits just below the intro. The holder slides in first,
+The scroll-driven sequence sits just below the intro. The brace slides in first,
 then the key arrives. The sequence inserts the 1.1 mm retaining wire,
 fits the two buttons one at a time, fills an octave, and
-extends the pattern across 48 notes. Scroll upward to reverse it. The stage
+extends the pattern across four octaves. Scroll upward to reverse it. The stage
 buttons allow jumping between steps; reduced-motion mode presents static views.
+Each step has its own progress segment. Highlights follow the displayed frame,
+using the shared stage timings in `src/assembly-stages.js`.
 GSAP ScrollTrigger scrubs a sequence of rendered 3D frames while CSS keeps the
 product in view. No WebGL is needed in the visitor's browser. Without JavaScript,
 a completed 3D note and the finished photograph remain visible.
@@ -24,8 +26,7 @@ a completed 3D note and the finished photograph remain visible.
 24 buttons, and one brace. Octaves repeat at 162 mm; the wire passes through
 the CAD hinge at Y = 2.5 mm, Z = 26.3 mm.
 
-The modified Oxygen49 uses four complete octaves (48 notes); the original
-highest C is omitted. The motion illustrates assembly and does not simulate
+The motion illustrates assembly and does not simulate
 flexing, contact, or snap fits.
 
 After editing the scroll behaviour in `src/assembly.js`:

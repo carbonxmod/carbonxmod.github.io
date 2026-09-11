@@ -1,6 +1,7 @@
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import frames from '../assets/assembly-frames/manifest.json'
+import { stages } from './assembly-stages.js'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -12,16 +13,10 @@ const status = section.querySelector('.assembly-status')
 const navigation = section.querySelector('.assembly-navigation')
 const title = section.querySelector('.assembly-step')
 const description = section.querySelector('.assembly-description')
-const progressBar = section.querySelector('.assembly-progress span')
-const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)')
-const stages = [
-    [0, 'start with the holder', 'One brace holds twelve keys.'],
-    [0.1, 'seat the key', 'The key fits into its slot in the brace.'],
-    [0.24, 'slide in the wire', 'A 1.1 mm steel wire holds the key in place.'],
-    [0.32, 'fit the buttons', 'Two buttons snap onto the same key.'],
-    [0.48, 'one octave', 'Six long keys and six short keys share a brace.'],
-    [0.66, '48 notes', 'Four complete octaves, with the highest C left out.'],
+const progressSegments = [
+    ...section.querySelectorAll('.assembly-progress span'),
 ]
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)')
 const cache = new Map()
 const playhead = { progress: 0 }
 let tween
@@ -71,6 +66,7 @@ function showFrame(entry, frame) {
     status.textContent = ''
     section.dataset.frame = String(frame)
     section.dataset.noteCount = String(frames.notes[frame])
+    updateTimeline(frame / (frames.count - 1))
 }
 
 function render(progress) {
@@ -84,9 +80,22 @@ function render(progress) {
         if (frame + offset < frames.count) loadFrame(frame + offset)
         if (frame - offset >= 0) loadFrame(frame - offset)
     }
+    section.dataset.progress = progress.toFixed(4)
+}
+
+// The caption, highlight and progress segments follow the displayed frame,
+// so they cannot run ahead while a new image is still loading.
+function updateTimeline(progress) {
     let stageIndex = 0
     stages.forEach(([start], index) => {
         if (progress >= start) stageIndex = index
+        const end = stages[index + 1]?.[0] ?? 1
+        const filled = gsap.utils.clamp(
+            0,
+            1,
+            (progress - start) / (end - start),
+        )
+        progressSegments[index].style.setProperty('--progress', String(filled))
     })
     if (stageIndex !== lastStage) {
         lastStage = stageIndex
@@ -98,8 +107,6 @@ function render(progress) {
             else button.removeAttribute('aria-current')
         })
     }
-    progressBar.style.transform = `scaleX(${progress})`
-    section.dataset.progress = progress.toFixed(4)
 }
 
 function setupScroll() {
