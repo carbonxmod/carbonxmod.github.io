@@ -171,7 +171,7 @@ try {
     await page.waitForFunction(
         () =>
             document.querySelector('.assembly-step').textContent ===
-            'slide in the wire',
+            'wire',
     )
     for (const viewport of [
         { width: 390, height: 844 },

@@ -223,8 +223,6 @@ a {
     grid-auto-flow: dense;
     gap: 28px;
     padding: 80px max(32px, calc((100% - 1120px) / 2)) 96px;
-    background-image: linear-gradient(#1e1f23e6, #1e1f23e6),
-        url('assets/hexagons.svg');
 }
 .explainers::before {
     content: '';
