@@ -223,72 +223,83 @@ a {
 }
 
 .explainers {
-    display: grid;
-    align-items: start;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-auto-flow: dense;
-    gap: 28px;
-    padding: 80px max(32px, calc((100% - 1120px) / 2)) 96px;
-}
-.explainers::before {
-    content: '';
-    grid-column: 2;
-}
-.explainers.measured {
-    grid-auto-rows: 1px;
-    row-gap: 0;
-}
-.explainers.measured::before {
-    grid-row: span 120;
-}
-.explainers.measured > section {
-    grid-row-start: auto;
+    width: min(1040px, calc(100% - 64px));
+    margin: 0 auto;
+    padding-block: 40px 64px;
 }
 .explainers > section {
-    position: relative;
-    grid-row: span 2;
-    min-width: 0;
-    padding: 40px;
-    border: 1px solid #ffffff0a;
-    border-radius: 12px;
-    background: var(--dark);
-    box-shadow: 0 12px 32px -24px #000;
-    text-align: left;
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 48px;
+    padding-block: 56px;
 }
-.explainers > section > svg {
-    position: absolute;
-    top: 43px;
-    right: 40px;
-    width: 28px;
-    height: 28px;
-    color: var(--muted);
-    opacity: 0.65;
-    stroke-width: 1.25px;
+.explainers > section + section {
+    border-top: 1px solid #ffffff18;
 }
 .explainers h2 {
-    margin: 0 44px 26px 0;
-    font-family: Gruppo, sans-serif;
-    font-size: clamp(2rem, 3vw, 2.6rem);
-    font-weight: 400;
-    line-height: 1.15;
+    margin: 0;
+    font: 400 clamp(2rem, 3vw, 2.6rem) / 1.15 Gruppo, sans-serif;
+}
+.section-copy {
+    min-width: 0;
+    max-width: 68ch;
+}
+.explainers p,
+.explainers li,
+.explainers dd {
+    font-size: 16px;
+    line-height: 1.8;
+    color: #bdc2c0;
 }
 .explainers p {
     margin: 0;
-    font-size: 15px;
-    line-height: 1.8;
-    color: #bdc2c0;
 }
 .explainers p + p {
     margin-top: 20px;
 }
-.explainers i {
+.explainers .section-intro {
+    font-size: 20px;
+    line-height: 1.6;
     color: var(--lighter);
 }
+.explainers h3 {
+    margin: 28px 0 12px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--lighter);
+}
+.print-settings {
+    margin: 24px 0;
+}
+.print-settings > div + div {
+    margin-top: 20px;
+}
+.print-settings dt {
+    margin-bottom: 4px;
+    font-weight: 400;
+    font-style: italic;
+}
+.print-settings dd {
+    margin: 0;
+}
 .explainers .parts {
-    margin-top: 26px;
-    padding-top: 22px;
-    border-top: 1px solid #ffffff12;
-    font-size: 14px;
+    margin: 0 0 24px;
+    padding-left: 20px;
+}
+.build-steps {
+    padding-left: 24px;
+    margin: 28px 0 0;
+}
+.build-steps li {
+    padding-left: 8px;
+}
+.build-steps li + li {
+    margin-top: 28px;
+}
+.build-steps h3 {
+    margin-top: 0;
+    font-weight: 400;
+    font-style: italic;
 }
 
 .assembly-sequence {
@@ -424,19 +435,86 @@ a {
 }
 .finished-keyboard {
     width: min(1200px, calc(100% - 64px));
-    margin: 64px auto 40px;
+    margin: 0 auto 80px;
+    padding-top: 40px;
+    border-top: 1px solid #ffffff18;
+}
+.finished-keyboard figcaption {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 28px;
+    color: var(--muted);
+    font-size: 12px;
+}
+.finished-keyboard h2 {
+    margin: 0 0 12px;
+    color: var(--lighter);
+    font: 400 clamp(2rem, 3vw, 2.6rem) / 1.15 Gruppo, sans-serif;
+}
+.finished-keyboard figcaption p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.6;
+}
+.finished-keyboard figcaption > span {
+    white-space: nowrap;
+}
+.photo-link {
+    display: block;
+    padding: clamp(12px, 3vw, 40px);
+    background: #161819;
+    cursor: zoom-in;
 }
 .finished-keyboard img {
     display: block;
     width: 100%;
+    height: auto;
+    box-shadow: 0 8px 28px #0005;
 }
-.finished-keyboard figcaption {
+html.photo-open {
+    overflow: hidden;
+}
+.photo-viewer {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100dvh;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 72px 24px 24px;
+    border: 0;
+    background: #161819;
+    color: var(--lighter);
+}
+.photo-viewer::backdrop {
+    background: #161819f5;
+}
+.photo-viewer[open] {
     display: flex;
-    justify-content: space-between;
-    gap: 20px;
-    padding-top: 16px;
-    color: var(--muted);
-    font-size: 12px;
+    align-items: center;
+    justify-content: center;
+}
+.photo-viewer img {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+.photo-close {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    min-height: 44px;
+    padding: 8px 12px;
+    border: 1px solid #ffffff30;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
 }
 a:focus-visible,
 summary:focus-visible,
@@ -449,21 +527,9 @@ button:focus-visible {
     .access nav {
         gap: 8px 18px;
     }
-    .explainers {
-        gap: 20px;
-        padding-top: 48px;
-    }
     .explainers > section {
-        padding: 28px;
-    }
-    .explainers > section > svg {
-        right: 28px;
-        top: 31px;
-        width: 24px;
-        height: 24px;
-    }
-    .explainers h2 {
-        font-size: 2rem;
+        grid-template-columns: 180px minmax(0, 1fr);
+        gap: 32px;
     }
 }
 @media (max-width: 700px) {
@@ -612,23 +678,21 @@ button:focus-visible {
         max-width: calc(100vw - 40px);
     }
     .explainers {
-        grid-template-columns: minmax(0, 1fr);
-        padding: 32px 20px 48px;
-        gap: 20px;
-    }
-    .explainers::before {
-        display: none;
+        width: calc(100% - 40px);
+        padding-block: 8px 32px;
     }
     .explainers > section {
-        grid-row: auto;
-        padding: 28px;
+        grid-template-columns: minmax(0, 1fr);
+        padding-block: 36px;
+        gap: 24px;
     }
-    .explainers p {
+    .explainers p,
+    .explainers li,
+    .explainers dd {
         font-size: 15px;
-        line-height: 1.75;
     }
-    .explainers h2 {
-        margin-bottom: 22px;
+    .explainers .section-intro {
+        font-size: 18px;
     }
     .bg-hexagons {
         background-attachment: scroll;
@@ -697,9 +761,18 @@ button:focus-visible {
     }
     .finished-keyboard {
         width: calc(100% - 40px);
-        margin-block: 32px;
+        margin-block: 0 40px;
+        padding-top: 32px;
     }
     .finished-keyboard figcaption {
-        font-size: 11px;
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    .finished-keyboard img {
+        max-height: 70svh;
+        object-fit: contain;
+        box-shadow: none;
     }
 }

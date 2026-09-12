@@ -3,12 +3,12 @@
 export const stages = [
     [0, 'brace', 'One brace holds twelve keys.'],
     [0.1, 'key', 'The key fits into its slot in the brace.'],
-    [0.24, 'wire', 'A 1.1 mm steel wire holds the key in place.'],
+    [0.24, 'wire', 'A steel wire holds the key in place.'],
     [0.32, 'buttons', 'Two buttons snap onto the same key.'],
     [0.46, 'octave', 'Six long keys and six short keys share a brace.'],
     [
         0.66,
         'keyboard',
-        'Four octaves, or possibly more. Twelve keys per brace.',
+        'Four octaves laid out one after another, with room for more.',
     ],
 ]
