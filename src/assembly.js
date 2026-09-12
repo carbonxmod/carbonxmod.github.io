@@ -4,10 +4,10 @@ import frames from '../assets/assembly-frames/manifest.json'
 import { stages } from './assembly-stages.js'
 
 gsap.registerPlugin(ScrollTrigger)
+ScrollTrigger.config({ ignoreMobileResize: true })
 
 const section = document.querySelector('.assembly-sequence')
 const viewport = section.querySelector('.assembly-viewport')
-const picture = section.querySelector('picture')
 const image = section.querySelector('.assembly-frame')
 const status = section.querySelector('.assembly-status')
 const navigation = section.querySelector('.assembly-navigation')
@@ -17,15 +17,23 @@ const progressSegments = [
     ...section.querySelectorAll('.assembly-progress span'),
 ]
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)')
+const narrowMedia = matchMedia('(max-width: 599px)')
 const cache = new Map()
+const canvas = document.createElement('canvas')
+canvas.className = 'assembly-canvas'
+canvas.setAttribute('aria-hidden', 'true')
+canvas.hidden = true
+viewport.appendChild(canvas)
+const context = canvas.getContext('2d', { alpha: false })
 const playhead = { progress: 0 }
 let tween
+let shownUrl
 let wanted
 let lastStage = -1
 let resizeFrame
 
 function frameUrl(frame) {
-    const variant = viewport.clientWidth < 600 ? 'narrow' : 'wide'
+    const variant = narrowMedia.matches ? 'narrow' : 'wide'
     return new URL(
         `assets/assembly-frames/${variant}/${String(frame).padStart(
             3,
@@ -37,32 +45,63 @@ function frameUrl(frame) {
 
 function loadFrame(frame) {
     const url = frameUrl(frame)
-    if (cache.has(url)) return cache.get(url)
+    if (cache.has(url)) {
+        const entry = cache.get(url)
+        cache.delete(url)
+        cache.set(url, entry)
+        return entry
+    }
     const entry = { image: new Image(), ready: false }
     cache.set(url, entry)
-    entry.image.onload = () => {
-        entry.ready = true
-        if (wanted === url) showFrame(entry, frame)
-        // Keep a small decoded working set; the browser caches the compressed files.
-        for (const [key, value] of cache) {
-            if (cache.size <= 16) break
-            if (value.ready && key !== wanted) cache.delete(key)
-        }
-    }
-    entry.image.onerror = () => {
-        if (wanted === url) {
-            status.textContent =
-                'This frame could not load. Try reloading the page, or skip to the instructions below.'
-        }
-        cache.delete(url)
-    }
+    entry.image.decoding = 'async'
     entry.image.src = url
+    entry.image
+        .decode()
+        .then(() => {
+            entry.ready = true
+            if (wanted === url) showFrame(entry, frame)
+            // Retain the most recently used decoded images, including the target.
+            let bytes = [...cache.values()].reduce(
+                (total, value) =>
+                    total +
+                    (value.ready
+                        ? value.image.naturalWidth *
+                          value.image.naturalHeight *
+                          4
+                        : 0),
+                0,
+            )
+            for (const [key, value] of cache) {
+                if (bytes <= 64 * 1024 * 1024) break
+                if (value.ready && key !== wanted) {
+                    cache.delete(key)
+                    bytes -=
+                        value.image.naturalWidth * value.image.naturalHeight * 4
+                }
+            }
+        })
+        .catch(() => {
+            if (wanted === url) {
+                status.textContent =
+                    'This frame could not load. Try reloading the page, or skip to the instructions below.'
+            }
+            cache.delete(url)
+        })
     return entry
 }
 
 function showFrame(entry, frame) {
-    picture.querySelector('source')?.remove()
-    if (image.src !== entry.image.src) image.src = entry.image.src
+    if (shownUrl === entry.image.src) return
+    if (
+        canvas.width !== entry.image.naturalWidth ||
+        canvas.height !== entry.image.naturalHeight
+    ) {
+        canvas.width = entry.image.naturalWidth
+        canvas.height = entry.image.naturalHeight
+    }
+    context.drawImage(entry.image, 0, 0)
+    canvas.hidden = false
+    shownUrl = entry.image.src
     status.textContent = ''
     section.dataset.frame = String(frame)
     section.dataset.noteCount = String(frames.notes[frame])
@@ -150,13 +189,13 @@ function initialize() {
     }
     reducedMotion.addEventListener('change', setupScroll)
     const resize = () => {
-        cancelAnimationFrame(resizeFrame)
-        resizeFrame = requestAnimationFrame(() => {
+        clearTimeout(resizeFrame)
+        resizeFrame = setTimeout(() => {
             ScrollTrigger.refresh()
             render(playhead.progress)
-        })
+        }, 150)
     }
-    new ResizeObserver(resize).observe(viewport)
+    new ResizeObserver(resize).observe(section.querySelector('.assembly-sticky'))
     navigation.addEventListener('click', (event) => {
         const button = event.target.closest('button[data-progress]')
         if (!button) return

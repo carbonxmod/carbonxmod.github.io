@@ -316,6 +316,29 @@ try {
                         .getBoundingClientRect().top,
                 ) < 2,
         )
+        assert.ok(
+            await mobile
+                .locator('.assembly-sticky')
+                .evaluate(
+                    (element) =>
+                        Math.abs(
+                            element.getBoundingClientRect().height -
+                                innerHeight,
+                        ) < 2,
+                ),
+            'The pinned animation fills the mobile viewport',
+        )
+        assert.ok(
+            await mobile
+                .locator('.assembly-canvas')
+                .evaluate(
+                    (element) =>
+                        !element.hidden &&
+                        element.width > 0 &&
+                        element.height > 0,
+                ),
+            'Decoded animation frames are painted on the canvas',
+        )
         await mobile.screenshot({
             path: `/tmp/carbonx-mobile-${viewport.width}.png`,
         })

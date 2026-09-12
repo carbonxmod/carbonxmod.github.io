@@ -316,6 +316,7 @@ a {
     position: sticky;
     top: 0;
     height: 100svh;
+    height: 100dvh;
     min-height: 0;
     display: grid;
     grid-template-rows: auto minmax(0, 1fr) auto auto;
@@ -355,6 +356,17 @@ a {
     height: 100%;
     object-fit: contain;
     touch-action: pan-y;
+}
+.assembly-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    touch-action: pan-y;
+}
+.assembly-canvas[hidden] {
+    display: none;
 }
 .assembly-caption {
     display: flex;
