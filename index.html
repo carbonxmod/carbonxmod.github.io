@@ -84,7 +84,30 @@
             </header>
             <section class="access bg-darker">
                 <div class="access-inner">
-                    <nav aria-label="Sections">
+                    <button
+                        class="menu-toggle"
+                        type="button"
+                        aria-expanded="false"
+                        aria-controls="section-menu"
+                        aria-label="Open menu"
+                        hidden
+                    >
+                        <svg
+                            width="22"
+                            height="22"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                            aria-hidden="true"
+                        >
+                            <path d="M4 6h16" />
+                            <path d="M4 12h16" />
+                            <path d="M4 18h16" />
+                        </svg>
+                        <span>menu</span>
+                    </button>
+                    <nav id="section-menu" aria-label="Sections">
                         <a href="#overview">overview</a>
                         <a href="#design">design</a>
                         <a href="#manufacturing">manufacturing</a>
@@ -350,6 +373,97 @@
         <script defer src="assets/assembly.js?v=3"></script>
         <script>
             if (window.feather) feather.replace()
+
+            const access = document.querySelector('.access-inner')
+            const menuToggle = access.querySelector('.menu-toggle')
+            const sectionMenu = access.querySelector('nav')
+            const mobileMenu = matchMedia('(max-width: 700px)')
+            access.classList.add('has-menu')
+            menuToggle.hidden = false
+            const menuBackground = [
+                ...document.querySelectorAll(
+                    '.showcase, .downloads, .assembly-sequence, main, .finished-keyboard',
+                ),
+            ]
+            const setMenuBackground = (open) => {
+                document.documentElement.classList.toggle('menu-visible', open)
+                menuBackground.forEach((element) => {
+                    element.inert = open
+                })
+            }
+            const closeMenu = () => {
+                setMenuBackground(false)
+                menuToggle.setAttribute('aria-label', 'Open menu')
+                menuToggle.setAttribute('aria-expanded', 'false')
+                access.classList.remove('menu-open')
+            }
+            menuToggle.addEventListener('click', () => {
+                const open = menuToggle.getAttribute('aria-expanded') !== 'true'
+                menuToggle.setAttribute('aria-expanded', String(open))
+                access.classList.toggle('menu-open', open)
+                menuToggle.setAttribute(
+                    'aria-label',
+                    open ? 'Close menu' : 'Open menu',
+                )
+                setMenuBackground(open)
+                if (open) downloads.open = false
+            })
+            sectionMenu.addEventListener('click', (event) => {
+                const link = event.target.closest('a')
+                if (!link) {
+                    if (!mobileMenu.matches) return
+                    closeMenu()
+                    menuToggle.focus()
+                    return
+                }
+                event.preventDefault()
+                closeMenu()
+                const target = document.querySelector(link.hash)
+                if (location.hash !== link.hash)
+                    history.pushState(null, '', link.hash)
+                requestAnimationFrame(() => {
+                    target.setAttribute('tabindex', '-1')
+                    target.focus({ preventScroll: true })
+                    target.scrollIntoView({
+                        behavior: 'instant',
+                        block: 'start',
+                    })
+                })
+            })
+            document.addEventListener('click', (event) => {
+                if (
+                    !sectionMenu.contains(event.target) &&
+                    !menuToggle.contains(event.target)
+                )
+                    closeMenu()
+            })
+            document.addEventListener('keydown', (event) => {
+                if (
+                    event.key === 'Escape' &&
+                    access.classList.contains('menu-open')
+                ) {
+                    closeMenu()
+                    menuToggle.focus()
+                }
+            })
+            document.addEventListener('keydown', (event) => {
+                if (
+                    event.key !== 'Tab' ||
+                    !access.classList.contains('menu-open')
+                )
+                    return
+                const links = [...sectionMenu.querySelectorAll('a')]
+                const first = menuToggle
+                const last = links.at(-1)
+                if (event.shiftKey && document.activeElement === first) {
+                    event.preventDefault()
+                    last.focus()
+                } else if (!event.shiftKey && document.activeElement === last) {
+                    event.preventDefault()
+                    first.focus()
+                }
+            })
+            mobileMenu.addEventListener('change', closeMenu)
 
             const downloads = document.querySelector('.downloads')
             downloads.addEventListener('toggle', () => {

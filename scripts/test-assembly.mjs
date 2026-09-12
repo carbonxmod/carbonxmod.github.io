@@ -169,9 +169,7 @@ try {
     await page.locator('.assembly-navigation button').nth(2).focus()
     await page.keyboard.press('Enter')
     await page.waitForFunction(
-        () =>
-            document.querySelector('.assembly-step').textContent ===
-            'wire',
+        () => document.querySelector('.assembly-step').textContent === 'wire',
     )
     for (const viewport of [
         { width: 390, height: 844 },
@@ -197,6 +195,148 @@ try {
                 ),
         )
     }
+    // Fresh touch devices exercise the mobile entry path and stage controls.
+    for (const viewport of [
+        { width: 320, height: 568 },
+        { width: 390, height: 844 },
+        { width: 844, height: 390 },
+    ]) {
+        const mobile = await browser.newPage({
+            viewport,
+            isMobile: true,
+            hasTouch: true,
+            deviceScaleFactor: 2,
+        })
+        mobile.on('pageerror', (error) => errors.push(error.message))
+        await mobile.goto(url)
+        await mobile.locator('.assembly-sequence.is-ready').waitFor()
+        if (viewport.width <= 700) {
+            const toggle = mobile.locator('.menu-toggle')
+            const menu = mobile.locator('#section-menu')
+            await menu.waitFor({ state: 'hidden' })
+            await toggle.tap()
+            assert.equal(await menu.isVisible(), true)
+            assert.equal(await toggle.getAttribute('aria-expanded'), 'true')
+            await mobile.keyboard.press('Escape')
+            await menu.waitFor({ state: 'hidden' })
+            await toggle.tap()
+            await menu.locator('a').last().tap()
+            assert.equal(new URL(mobile.url()).hash, '#play')
+            await mobile.waitForFunction(
+                () =>
+                    Math.abs(
+                        document.querySelector('#play').getBoundingClientRect()
+                            .top - 32,
+                    ) < 2,
+            )
+            for (const id of [
+                'overview',
+                'design',
+                'manufacturing',
+                'assembly',
+            ]) {
+                await toggle.tap()
+                await menu.locator(`a[href="#${id}"]`).tap()
+                await mobile.waitForFunction(
+                    (id) =>
+                        Math.abs(
+                            document.getElementById(id).getBoundingClientRect()
+                                .top - 32,
+                        ) < 2,
+                    id,
+                )
+            }
+
+            await menu.waitFor({ state: 'hidden' })
+            await toggle.tap()
+            assert.equal(
+                await mobile.locator('main').evaluate((el) => el.inert),
+                true,
+            )
+            await mobile.keyboard.press('Shift+Tab')
+            assert.equal(
+                await menu
+                    .locator('a')
+                    .last()
+                    .evaluate((el) => el === document.activeElement),
+                true,
+            )
+            await mobile.keyboard.press('Tab')
+            assert.equal(
+                await toggle.evaluate((el) => el === document.activeElement),
+                true,
+            )
+            await menu.tap({ position: { x: 10, y: 80 } })
+            await menu.waitFor({ state: 'hidden' })
+            assert.equal(
+                await mobile.locator('main').evaluate((el) => el.inert),
+                false,
+            )
+        } else {
+            assert.equal(
+                await mobile.locator('.menu-toggle').isVisible(),
+                false,
+            )
+            assert.equal(
+                await mobile.locator('#section-menu').isVisible(),
+                true,
+            )
+        }
+        await mobile.locator('.downloads summary').tap()
+        assert.equal(
+            await mobile.locator('.download-options').isVisible(),
+            true,
+        )
+        await mobile.locator('.downloads summary').tap()
+        for (let index = 0; index < 6; index++) {
+            const button = mobile
+                .locator('.assembly-navigation button')
+                .nth(index)
+            await button.tap()
+            await mobile.waitForFunction((i) => {
+                const buttons = document.querySelectorAll(
+                    '.assembly-navigation button',
+                )
+                return buttons[i].getAttribute('aria-current') === 'step'
+            }, index)
+            assert.ok(
+                await button.evaluate((element) => {
+                    const rect = element.getBoundingClientRect()
+                    return rect.top >= 0 && rect.bottom <= innerHeight
+                }),
+            )
+        }
+        await mobile.waitForFunction(
+            () =>
+                document.querySelector('.assembly-sequence').dataset.frame ===
+                    '120' &&
+                Math.abs(
+                    document
+                        .querySelector('.assembly-sticky')
+                        .getBoundingClientRect().top,
+                ) < 2,
+        )
+        await mobile.screenshot({
+            path: `/tmp/carbonx-mobile-${viewport.width}.png`,
+        })
+        await mobile.locator('.assembly-skip').tap()
+        assert.equal(new URL(mobile.url()).hash, '#overview')
+        assert.ok(
+            await mobile.evaluate(
+                () => document.documentElement.scrollWidth <= innerWidth,
+            ),
+        )
+        assert.equal(
+            await mobile
+                .locator('.explainers')
+                .evaluate(
+                    (element) => getComputedStyle(element).backgroundImage,
+                ),
+            'none',
+        )
+        await mobile.close()
+    }
+
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.waitForFunction(
         () => document.querySelector('.assembly-sequence').offsetHeight < 1000,

@@ -140,6 +140,14 @@ function initialize() {
     section.classList.add('is-ready')
     navigation.hidden = false
     setupScroll()
+    // Expanding the animation must not move a previously selected section away.
+    const destination = document.getElementById(location.hash.slice(1))
+    if (destination && document.querySelector('main').contains(destination)) {
+        requestAnimationFrame(() => {
+            ScrollTrigger.refresh()
+            destination.scrollIntoView({ behavior: 'instant', block: 'start' })
+        })
+    }
     reducedMotion.addEventListener('change', setupScroll)
     const resize = () => {
         cancelAnimationFrame(resizeFrame)
