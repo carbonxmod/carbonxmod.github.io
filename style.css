@@ -310,7 +310,7 @@ a {
     padding: 36px max(32px, calc((100% - 1200px) / 2));
 }
 .assembly-sequence.is-ready {
-    height: 600svh;
+    height: 650svh;
 }
 .is-ready .assembly-sticky {
     position: sticky;
@@ -398,7 +398,7 @@ a {
 }
 .assembly-progress {
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(8, minmax(0, 1fr));
     gap: var(--stage-gap, 8px);
     height: 2px;
     margin: 8px 0 12px;
@@ -418,7 +418,7 @@ a {
 }
 .assembly-navigation nav {
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(8, minmax(0, 1fr));
     gap: var(--stage-gap, 8px);
 }
 .assembly-navigation button {
@@ -768,8 +768,8 @@ button:focus-visible {
     .assembly-navigation {
         --stage-gap: 4px;
     }
-    .assembly-navigation button {
-        font-size: 10px;
+    .assembly-navigation nav {
+        display: none;
     }
     .finished-keyboard {
         width: calc(100% - 40px);

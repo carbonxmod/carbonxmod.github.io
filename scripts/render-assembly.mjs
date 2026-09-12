@@ -1,7 +1,7 @@
 import { build } from 'esbuild'
 import { chromium } from 'playwright'
 import { createServer } from 'node:http'
-import { readFile, mkdir, writeFile, copyFile } from 'node:fs/promises'
+import { readFile, mkdir, writeFile, copyFile, access } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { extname, resolve } from 'node:path'
 
@@ -57,9 +57,10 @@ const browser = await chromium.launch({
         : {}),
     args: ['--no-sandbox', '--enable-unsafe-swiftshader'],
 })
-const count = 121
+const count = 181
 const notes = []
 const parts = []
+const swaps = []
 const version = createHash('sha256')
     .update(bundle.outputFiles[0].text)
     .digest('hex')
@@ -77,29 +78,51 @@ try {
             () => typeof window.renderAssemblyFrame === 'function',
         )
         for (let frame = 0; frame < count; frame++) {
-            const result = await page.evaluate((progress) => {
-                window.renderAssemblyFrame(progress)
-                return {
-                    image: document
-                        .querySelector('canvas')
-                        .toDataURL('image/webp', 0.86),
-                    notes: Number(
-                        document.querySelector('.assembly-sequence').dataset
-                            .noteCount,
-                    ),
-                    parts: JSON.parse(
-                        document.querySelector('.assembly-sequence').dataset
-                            .partCounts,
-                    ),
-                }
-            }, frame / (count - 1))
-            await writeFile(
-                resolve(directory, `${String(frame).padStart(3, '0')}.webp`),
-                Buffer.from(result.image.split(',')[1], 'base64'),
+            const target = resolve(
+                directory,
+                `${String(frame).padStart(3, '0')}.webp`,
             )
+            // Opt-in resume is only for interrupted renders with unchanged scene geometry.
+            const cached =
+                process.env.ASSEMBLY_RESUME === '1' &&
+                (await access(target).then(
+                    () => true,
+                    () => false,
+                ))
+            const result = await page.evaluate(
+                ({ progress, cached }) => {
+                    window.renderAssemblyFrame(progress, !cached)
+                    return {
+                        image: cached
+                            ? null
+                            : document
+                                  .querySelector('canvas')
+                                  .toDataURL('image/webp', 0.86),
+                        notes: Number(
+                            document.querySelector('.assembly-sequence').dataset
+                                .noteCount,
+                        ),
+                        swap: JSON.parse(
+                            document.querySelector('.assembly-sequence').dataset
+                                .swap,
+                        ),
+                        parts: JSON.parse(
+                            document.querySelector('.assembly-sequence').dataset
+                                .partCounts,
+                        ),
+                    }
+                },
+                { progress: frame / 120, cached },
+            )
+            if (!cached)
+                await writeFile(
+                    target,
+                    Buffer.from(result.image.split(',')[1], 'base64'),
+                )
             if (variant === 'wide') {
                 notes.push(result.notes)
                 parts.push(result.parts)
+                swaps.push(result.swap)
             }
             if (frame % 30 === 0)
                 console.log(`${variant}: ${frame}/${count - 1}`)
@@ -113,7 +136,7 @@ try {
     }
     await writeFile(
         resolve(root, 'assets/assembly-frames/manifest.json'),
-        `${JSON.stringify({ count, version, notes, parts })}\n`,
+        `${JSON.stringify({ count, version, notes, parts, swaps })}\n`,
     )
 } finally {
     await browser.close()

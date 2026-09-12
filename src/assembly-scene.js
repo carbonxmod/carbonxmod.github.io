@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { STLLoader } from 'three/addons/loaders/STLLoader.js'
+import { createOxygenHousing } from './oxygen-housing.js'
 import { stages } from './assembly-stages.js'
 
 const section = document.querySelector('.assembly-sequence')
@@ -65,6 +66,27 @@ async function initialize() {
         )
         const model = new THREE.Group()
         scene.add(model)
+        const { housing, originalKeys, bottom, top } =
+            await createOxygenHousing()
+        scene.add(housing)
+        // Composite the fully opaque keyboard once, then fade that whole layer.
+        // Per-material opacity exposes overlapping shells and keys during entry.
+        const fadeTarget = new THREE.WebGLRenderTarget(1, 1)
+        fadeTarget.texture.colorSpace = THREE.SRGBColorSpace
+        const fadeScene = new THREE.Scene()
+        const fadeCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1)
+        const fadeMaterial = new THREE.MeshBasicMaterial({
+            map: fadeTarget.texture,
+            transparent: true,
+            depthTest: false,
+            depthWrite: false,
+            toneMapped: false,
+        })
+        const fadeQuad = new THREE.Mesh(
+            new THREE.PlaneGeometry(2, 2),
+            fadeMaterial,
+        )
+        fadeScene.add(fadeQuad)
 
         scene.add(new THREE.HemisphereLight(0xf0f5f1, 0x45504d, 2.4))
         const keyLight = new THREE.DirectionalLight(0xfff6e9, 3.2)
@@ -182,8 +204,40 @@ async function initialize() {
             )
         }
 
-        function update(progress) {
+        function screenBounds(objects) {
+            const bounds = new THREE.Box3()
+            for (const object of objects) {
+                const box = new THREE.Box3().setFromObject(object)
+                for (const x of [box.min.x, box.max.x])
+                    for (const y of [box.min.y, box.max.y])
+                        for (const z of [box.min.z, box.max.z])
+                            bounds.expandByPoint(
+                                new THREE.Vector3(x, y, z).applyMatrix4(
+                                    camera.matrixWorldInverse,
+                                ),
+                            )
+            }
+            return bounds
+        }
+
+        function update(timeline, paint = true) {
             if (disposed) return
+            const progress = Math.min(timeline, 1)
+            // Once the housing arrives, only its actual surfaces receive shadows.
+            surface.visible = timeline <= 1
+            renderer.shadowMap.enabled = width >= 700 || timeline > 1
+            const reveal = interval(timeline, 1, 1.07)
+            const cameraReveal = interval(timeline, 0.92, 1.2)
+            const pullback = cameraReveal * (1 - interval(timeline, 1.32, 1.5))
+            const close = interval(timeline, 1.44, 1.5)
+            const open = interval(timeline, 1.07, 1.16) * (1 - close)
+            const remove = interval(timeline, 1.18, 1.3)
+            const fit = interval(timeline, 1.32, 1.44)
+            top.position.y = 90 * open
+            bottom.position.set(324, -31 - 120 * open, 30)
+            housing.visible = timeline > 1
+            housing.position.set(0, -180 * (1 - reveal), 260 * (1 - reveal))
+            originalKeys.visible = remove < 1
             let visibleNotes = 0
             const visibleParts = { brace: 0, key: 0, wire: 0, button: 0 }
             for (const mesh of parts) {
@@ -283,25 +337,113 @@ async function initialize() {
                 mix(155, 380, fullView),
                 mix(260, 430, fullView),
             )
+            // Continue the opening camera drift through the swap without
+            // flipping the model or changing the portrait orientation.
+            const drift = interval(timeline, 1, 1.5)
+            cameraOffset.applyAxisAngle(
+                new THREE.Vector3(0, 1, 0),
+                0.16 * drift,
+            )
+            cameraOffset.y += 28 * drift
+            lookAt.lerp(new THREE.Vector3(275, 85, 40), cameraReveal)
+            lookAt.y -= 50 * pullback
             camera.position.copy(lookAt).add(cameraOffset)
             camera.up.set(0, 1, 0)
             camera.lookAt(lookAt)
-            if (mobile) camera.rotateZ((Math.PI / 2) * fullView)
+            if (mobile) camera.rotateZ((-Math.PI / 2) * fullView)
+            // Follow screen-up so the slides stay vertical in portrait framing too.
+            const screenUp = new THREE.Vector3(0, 1, 0).applyQuaternion(
+                camera.quaternion,
+            )
+            originalKeys.position.copy(screenUp).multiplyScalar(-950 * remove)
+            model.position.set(0, 0, 0)
+            camera.updateMatrixWorld(true)
+            scene.updateMatrixWorld(true)
+            let composition
+            const waiting = reveal * (1 - fit)
+            if (timeline > 1) {
+                const shellBounds = new THREE.Box3().setFromObject(top)
+                const keyBounds = new THREE.Box3().setFromObject(model)
+                // Park behind the rear edge with a generous gap, then slide forward.
+                const distance = Math.max(
+                    0,
+                    keyBounds.max.z - shellBounds.min.z + 160,
+                )
+                model.position.z = -distance * waiting
+                composition = screenBounds([top, bottom, model])
+            }
+            section.dataset.swap = JSON.stringify({
+                housing: housing.visible,
+                originalKeys: originalKeys.visible,
+                lift: model.position.y,
+                bottomOpen: open,
+                installed: fit,
+                slide: model.position.x,
+            })
             const aspect = width / height
             const closeHeight = Math.max(280, 305 / aspect)
             const farHeight = mobile
                 ? Math.max(790, 280 / aspect)
                 : Math.max(320, 790 / aspect)
-            const viewHeight = mix(closeHeight, farHeight, fullView)
+            let viewHeight =
+                180 * pullback +
+                mix(
+                    mix(closeHeight, farHeight, fullView),
+                    mobile ? 1250 : Math.max(620, 1100 / aspect),
+                    cameraReveal,
+                )
+            if (composition) {
+                const size = composition.getSize(new THREE.Vector3())
+                const center = composition.getCenter(new THREE.Vector3())
+                const offset = new THREE.Vector3(center.x, center.y, 0)
+                    .applyQuaternion(camera.quaternion)
+                    .multiplyScalar(mobile ? reveal : waiting)
+                camera.position.add(offset)
+                lookAt.add(offset)
+                viewHeight = mix(
+                    viewHeight,
+                    Math.max(
+                        viewHeight,
+                        size.y * 1.18,
+                        (size.x / aspect) * 1.18,
+                    ),
+                    pullback,
+                )
+            }
+            // Anticipate the entrance and settle after it instead of tracking
+            // the housing's shorter movement exactly.
+            viewHeight *= 1 + 0.18 * pullback
             camera.left = (-viewHeight * aspect) / 2
             camera.right = (viewHeight * aspect) / 2
             camera.top = viewHeight / 2
             camera.bottom = -viewHeight / 2
             camera.updateProjectionMatrix()
-            renderer.render(scene, camera)
+            if (paint) {
+                if (reveal > 0 && reveal < 1) {
+                    const size = renderer.getDrawingBufferSize(
+                        new THREE.Vector2(),
+                    )
+                    fadeTarget.setSize(size.x, size.y)
+                    model.visible = surface.visible = false
+                    renderer.setRenderTarget(fadeTarget)
+                    renderer.setClearColor(0x202427, 0)
+                    renderer.render(scene, camera)
+                    renderer.setRenderTarget(null)
+                    renderer.setClearColor(0x202427, 1)
+                    model.visible = true
+                    surface.visible = false
+                    housing.visible = false
+                    renderer.render(scene, camera)
+                    fadeMaterial.opacity = reveal
+                    renderer.autoClear = false
+                    renderer.render(fadeScene, fadeCamera)
+                    renderer.autoClear = true
+                    housing.visible = true
+                } else renderer.render(scene, camera)
+            }
 
             const stageIndex = stages.findLastIndex(
-                ([start]) => progress >= start,
+                ([start]) => timeline / 1.5 >= start,
             )
             if (stageIndex !== lastStage) {
                 lastStage = stageIndex
@@ -382,6 +524,9 @@ async function initialize() {
             Object.values(palette).forEach((entry) => entry.dispose())
             surface.geometry.dispose()
             surface.material.dispose()
+            fadeTarget.dispose()
+            fadeMaterial.dispose()
+            fadeQuad.geometry.dispose()
             renderer.dispose()
         }
         resize()

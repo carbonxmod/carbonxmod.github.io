@@ -8,7 +8,17 @@ export const stages = [
     [0.46, 'octave', 'Six long keys and six short keys share a brace.'],
     [
         0.66,
-        'keyboard',
+        'keybed',
         'Four octaves laid out one after another, with room for more.',
     ],
-]
+    [
+        1,
+        'remove',
+        'Take apart the housing, then remove the original keybed.',
+    ],
+    [
+        1.32,
+        'install',
+        'Install the new keybed, then put the housing back together.',
+    ],
+].map(([start, title, description]) => [start / 1.5, title, description])

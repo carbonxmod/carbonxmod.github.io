@@ -26,6 +26,7 @@ canvas.hidden = true
 viewport.appendChild(canvas)
 const context = canvas.getContext('2d', { alpha: false })
 const playhead = { progress: 0 }
+const assemblyEnd = 10 / 11
 let tween
 let shownUrl
 let wanted
@@ -101,6 +102,7 @@ function showFrame(entry, frame) {
     }
     context.drawImage(entry.image, 0, 0)
     canvas.hidden = false
+    image.style.visibility = 'hidden'
     shownUrl = entry.image.src
     status.textContent = ''
     section.dataset.frame = String(frame)
@@ -110,6 +112,18 @@ function showFrame(entry, frame) {
 
 function render(progress) {
     playhead.progress = progress
+    const finish = reducedMotion.matches
+        ? 0
+        : Math.max(0, (progress - assemblyEnd) / (1 - assemblyEnd))
+    const settled = finish * finish * (3 - 2 * finish)
+    const rise = Math.expm1(6 * finish) / Math.expm1(6)
+    canvas.style.transform = `translateY(${
+        narrowMedia.matches ? 0 : -24 * rise
+    }px) scale(${1 + 0.14 * settled})`
+    section.dataset.finish = finish.toFixed(4)
+    progress = reducedMotion.matches
+        ? progress
+        : Math.min(progress / assemblyEnd, 1)
     const frame = Math.round(progress * (frames.count - 1))
     wanted = frameUrl(frame)
     const entry = loadFrame(frame)
@@ -195,7 +209,9 @@ function initialize() {
             render(playhead.progress)
         }, 150)
     }
-    new ResizeObserver(resize).observe(section.querySelector('.assembly-sticky'))
+    new ResizeObserver(resize).observe(
+        section.querySelector('.assembly-sticky'),
+    )
     navigation.addEventListener('click', (event) => {
         const button = event.target.closest('button[data-progress]')
         if (!button) return
@@ -206,7 +222,9 @@ function initialize() {
         }
         const trigger = tween.scrollTrigger
         window.scrollTo({
-            top: trigger.start + progress * (trigger.end - trigger.start),
+            top:
+                trigger.start +
+                progress * assemblyEnd * (trigger.end - trigger.start),
             behavior: 'smooth',
         })
     })

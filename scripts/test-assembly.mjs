@@ -16,6 +16,16 @@ assert.deepEqual(frames.parts[0], { brace: 0, key: 0, wire: 0, button: 0 })
 assert.deepEqual(frames.parts[6], { brace: 1, key: 0, wire: 0, button: 0 })
 assert.deepEqual(frames.parts[24], { brace: 1, key: 1, wire: 0, button: 0 })
 assert.deepEqual(frames.parts[42], { brace: 1, key: 1, wire: 1, button: 1 })
+assert.equal(frames.swaps[120].housing, false)
+assert.equal(frames.swaps[135].originalKeys, true)
+assert.equal(frames.swaps[160].originalKeys, false)
+assert.equal(frames.swaps[180].housing, true)
+assert.equal(frames.swaps[180].lift, 0)
+assert.equal(frames.swaps[142].bottomOpen, 1)
+assert.equal(frames.swaps[142].installed, 0)
+assert.equal(frames.swaps[174].installed, 1)
+assert.equal(frames.swaps[180].bottomOpen, 0)
+assert.equal(frames.swaps[180].slide, 0)
 assert.deepEqual(frames.parts[54], { brace: 1, key: 1, wire: 1, button: 2 })
 const types = {
     '.html': 'text/html',
@@ -70,7 +80,7 @@ try {
                 top:
                     s.getBoundingClientRect().top +
                     scrollY +
-                    p *
+                    ((p * 10) / 11) *
                         (s.offsetHeight -
                             s.querySelector('.assembly-sticky').offsetHeight),
                 behavior: 'instant',
@@ -80,7 +90,7 @@ try {
             const s = document.querySelector('.assembly-sequence')
             return (
                 Math.abs(Number(s.dataset.progress) - p) < 0.002 &&
-                Number(s.dataset.frame) === Math.round(p * 120)
+                Number(s.dataset.frame) === Math.round(p * 180)
             )
         }, progress)
     }
@@ -95,6 +105,17 @@ try {
                 active: buttons.findIndex(
                     (button) => button.getAttribute('aria-current') === 'step',
                 ),
+                title: s.querySelector('.assembly-step').textContent.trim(),
+                activeLabel: buttons
+                    .find((button) =>
+                        button.getAttribute('aria-current') === 'step',
+                    )
+                    ?.textContent.trim(),
+                labelsVisible: buttons.some(
+                    (button) =>
+                        getComputedStyle(button).display !== 'none' &&
+                        button.getBoundingClientRect().width > 0,
+                ),
                 fills: segments.map((segment) =>
                     Number(segment.style.getPropertyValue('--progress')),
                 ),
@@ -108,13 +129,17 @@ try {
                 }),
             }
         })
-        const progress = state.frame / 120
-        const starts = [0, 0.1, 0.24, 0.32, 0.46, 0.66]
+        const progress = state.frame / 180
+        const starts = [0, 0.1, 0.24, 0.32, 0.46, 0.66, 1, 1.32].map(
+            (p) => p / 1.5,
+        )
         assert.equal(
             state.active,
             starts.findLastIndex((start) => progress >= start),
         )
-        assert.ok(state.aligned)
+        assert.equal(state.title, state.activeLabel)
+        if (state.aligned || !state.labelsVisible) assert.ok(true)
+        else assert.fail('Visible timeline labels must align with their progress segments')
         starts.forEach((start, index) => {
             const expected = Math.max(
                 0,
@@ -127,9 +152,12 @@ try {
         })
     }
     // Both sides of every transition, going forward and backward.
-    const boundaries = [0, 11, 12, 28, 29, 38, 39, 55, 56, 79, 80, 120]
+    const boundaries = [
+        0, 11, 12, 28, 29, 38, 39, 55, 56, 79, 80, 119, 120, 121, 150, 158, 159,
+        180,
+    ]
     for (const frame of [...boundaries, ...boundaries.toReversed()]) {
-        await seek(frame / 120)
+        await seek(frame / 180)
         await checkTimeline()
     }
     for (const [progress, notes] of [
@@ -140,7 +168,7 @@ try {
         [1, 48],
         [0, 0],
     ]) {
-        await seek(progress)
+        await seek(progress / 1.5)
         assert.equal(
             Number(
                 await page
@@ -155,6 +183,44 @@ try {
                 .evaluate((s) => Math.abs(s.getBoundingClientRect().top) < 2),
         )
     }
+    // The completed keyboard stays pinned through an extra half viewport of scroll.
+    await seek(1)
+    const completed = await page
+        .locator('.assembly-canvas')
+        .evaluate((el) => getComputedStyle(el).transform)
+    await page.evaluate(() => {
+        const section = document.querySelector('.assembly-sequence')
+        scrollTo({
+            top:
+                section.offsetTop +
+                (section.offsetHeight -
+                    document.querySelector('.assembly-sticky').offsetHeight) *
+                    0.98,
+            behavior: 'instant',
+        })
+    })
+    await page.waitForFunction(
+        () =>
+            Number(
+                document.querySelector('.assembly-sequence').dataset.finish,
+            ) > 0.7,
+    )
+    assert.equal(
+        await page.locator('.assembly-sequence').getAttribute('data-frame'),
+        '180',
+    )
+    assert.ok(
+        await page
+            .locator('.assembly-sticky')
+            .evaluate((el) => Math.abs(el.getBoundingClientRect().top) < 2),
+    )
+    assert.notEqual(
+        await page
+            .locator('.assembly-canvas')
+            .evaluate((el) => getComputedStyle(el).transform),
+        completed,
+    )
+    await seek(0)
     await page.mouse.wheel(0, 700)
     await page.waitForFunction(
         () =>
@@ -288,7 +354,7 @@ try {
             true,
         )
         await mobile.locator('.downloads summary').tap()
-        for (let index = 0; index < 6; index++) {
+        for (let index = 0; index < 8; index++) {
             const button = mobile
                 .locator('.assembly-navigation button')
                 .nth(index)
@@ -309,7 +375,7 @@ try {
         await mobile.waitForFunction(
             () =>
                 document.querySelector('.assembly-sequence').dataset.frame ===
-                    '120' &&
+                    '180' &&
                 Math.abs(
                     document
                         .querySelector('.assembly-sticky')
@@ -388,7 +454,7 @@ try {
     await localFile.waitForFunction(
         () =>
             document.querySelector('.assembly-sequence').dataset.frame ===
-            '120',
+            '180',
     )
     assert.ok(
         await localFile
@@ -423,7 +489,7 @@ try {
         await delayed.waitForFunction(
             () =>
                 document.querySelector('.assembly-sequence').dataset
-                    .progress === '0.2000',
+                    .progress === '0.1333',
         )
         assert.equal(
             await delayed
